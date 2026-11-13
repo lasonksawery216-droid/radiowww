@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FM-DX PRO CONSOLE // STABILNY AUDIO</title>
+<style>
+  :root {
+    --bg-main: #0a0c10;
+    --bg-panel: #131720;
+    --bg-screen: #06090e;
+    --border-color: #262e3d;
+    --accent-cyan: #00f0ff;
+    --accent-amber: #ffb800;
+    --accent-green: #00ff66;
+    --accent-red: #ff3355;
+    --text-main: #e2e8f0;
+    --text-dim: #64748b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-main);
+    background-image: radial-gradient(circle at 50% 0%, #1a2234 0%, #0a0c10 75%);
+    color: var(--text-main);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .tuner-chassis {
+    width: 100%;
+    max-width: 960px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+
+  .top-bar {
+    background: #0d1017;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    font-size: 15px;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-red);
+    box-shadow: 0 0 8px var(--accent-red);
+    transition: all 0.3s ease;
+  }
+
+  .status-dot.connected {
+    background: var(--accent-green);
+    box-shadow: 0 0 12px var(--accent-green);
+  }
+
+  .connection-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  select, input[type="text"], input[type="number"] {
+    background: #07090d;
+    border: 1px solid #2d3748;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+  }
+
+  select:focus, input:focus { border-color: var(--accent-cyan); }
+  input[type="text"] { min-width: 220px; font-family: 'Consolas', monospace; }
+
+  .btn {
+    background: #1e2636; color: #fff; border: 1px solid #334155; padding: 8px 14px;
+    border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-transform: uppercase;
+  }
+  .btn:hover { background: #2b364d; border-color: var(--accent-cyan); }
+  .btn-primary { background: rgba(0, 240, 255, 0.15); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+  .btn-primary:hover { background: var(--accent-cyan); color: #000; box-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
+  .btn-danger { background: rgba(255, 51, 85, 0.12); border-color: var(--accent-red); color: var(--accent-red); }
+  .btn-audio-active { background: var(--accent-green) !important; color: #000 !important; border-color: var(--accent-green) !important; box-shadow: 0 0 18px rgba(0, 255, 102, 0.5); }
+
+  .vfd-screen {
+    margin: 22px; background: var(--bg-screen); border: 2px solid #1e2533; border-radius: 12px; padding: 24px;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.9);
+  }
+
+  .screen-top-indicators {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+    font-family: 'Consolas', monospace; font-size: 12px;
+  }
+
+  .badges-group { display: flex; gap: 10px; }
+  .indicator-pill {
+    padding: 3px 10px; border-radius: 4px; background: #111622; color: #475569; border: 1px solid #1e293b; font-weight: bold;
+  }
+  .indicator-pill.active-stereo { color: var(--accent-red); border-color: rgba(255, 51, 85, 0.4); background: rgba(255, 51, 85, 0.1); }
+  .indicator-pill.active-rds { color: var(--accent-cyan); border-color: rgba(0, 240, 255, 0.4); background: rgba(0, 240, 255, 0.1); }
+
+  .main-readout {
+    display: grid; grid-template-columns: 1.1fr 1.4fr; gap: 24px; align-items: center;
+    padding-bottom: 20px; border-bottom: 1px solid #151c28;
+  }
+  @media (max-width: 720px) { .main-readout { grid-template-columns: 1fr; } }
+
+  .freq-number {
+    font-family: 'Consolas', monospace; font-size: 64px; font-weight: 700; color: var(--accent-cyan);
+    text-shadow: 0 0 20px rgba(0, 240, 255, 0.45); line-height: 1;
+  }
+  .freq-unit { font-size: 18px; font-weight: 700; color: var(--text-dim); }
+
+  .rds-block { background: #090d14; border: 1px solid #182030; border-radius: 8px; padding: 14px 18px; }
+  .rds-ps-text {
+    font-family: 'Consolas', monospace; font-size: 34px; font-weight: 700; color: var(--accent-amber);
+    text-shadow: 0 0 15px rgba(255, 184, 0, 0.4); letter-spacing: 4px; min-height: 40px;
+  }
+  .rds-rt-scroll { font-family: 'Consolas', monospace; font-size: 14px; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-top: 6px; border-top: 1px dashed #1e293b; }
+
+  .meters-row { margin-top: 18px; }
+  .smeter-container { display: flex; flex-direction: column; gap: 6px; }
+  .smeter-header { display: flex; justify-content: space-between; font-family: 'Consolas', monospace; font-size: 12px; color: var(--text-dim); }
+  .smeter-bar-bg { height: 14px; background: #0d121c; border-radius: 4px; border: 1px solid #1e293b; overflow: hidden; }
+  .smeter-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00f0ff 0%, #00ff66 60%, #ffb800 85%, #ff3355 100%); transition: width 0.15s ease-out; }
+  .smeter-ticks { display: flex; justify-content: space-between; font-family: 'Consolas', monospace; font-size: 10px; color: #475569; }
+
+  .controls-deck { padding: 0 22px 22px 22px; display: flex; flex-direction: column; gap: 18px; }
+  .tuning-strip { background: #0f131b; border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 18px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+  .step-buttons { display: flex; gap: 6px; align-items: center; }
+  .direct-tune { display: flex; gap: 8px; align-items: center; }
+  .direct-tune input { width: 100px; font-family: 'Consolas', monospace; font-size: 16px; font-weight: bold; text-align: center; color: var(--accent-cyan); }
+
+  .presets-section { background: #0f131b; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 18px; }
+  .presets-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .presets-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); font-weight: 700; }
+  .presets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; }
+  .preset-card { background: #161c28; border: 1px solid #263042; border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: all 0.15s ease; display: flex; flex-direction: column; gap: 4px; }
+  .preset-card:hover { border-color: var(--accent-cyan); background: #1c2434; }
+  .preset-card.active-preset { border-color: var(--accent-amber); background: rgba(255, 184, 0, 0.08); }
+  .preset-freq { font-family: 'Consolas', monospace; font-size: 15px; font-weight: bold; color: var(--accent-cyan); }
+  .preset-name { font-size: 12px; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .console-drawer { background: #07090d; border-top: 1px solid var(--border-color); padding: 12px 22px; }
+  .log-output { font-family: 'Consolas', monospace; font-size: 12px; color: #64748b; height: 85px; overflow-y: auto; line-height: 1.5; }
+  .log-output span.ok { color: var(--accent-green); }
+  .log-output span.err { color: var(--accent-red); }
+  .log-output span.info { color: var(--accent-cyan); }
+
+  /* Ukryta ramka obsługująca stabilny strumień audio z serwera */
+  #audioFrame {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="tuner-chassis">
+  <div class="top-bar">
+    <div class="brand-badge">
+      <div class="status-dot" id="statusDot"></div>
+      <span>FM-DX PRO // HYBRID AUDIO</span>
+    </div>
+
+    <div class="connection-controls">
+      <select id="presetSelect" onchange="updateNode(this.value)">
+        <option value="https://krakow.fmtuner.org">Kraków Nowa Huta</option>
+        <option value="https://gdansk.fmtuner.org">Gdańsk</option>
+        <option value="https://sosnowiec.dxpoland.eu">Sosnowiec</option>
+      </select>
+      <input type="text" id="serverUrl" value="https://krakow.fmtuner.org">
+      <button class="btn btn-primary" onclick="connectTuner()">Połącz</button>
+      <button class="btn btn-danger" onclick="disconnectTuner()">Rozłącz</button>
+    </div>
+  </div>
+
+  <div class="vfd-screen">
+    <div class="screen-top-indicators">
+      <div class="badges-group">
+        <span class="indicator-pill" id="badgeStereo">STEREO</span>
+        <span class="indicator-pill" id="badgeRds">RDS</span>
+        <span class="indicator-pill" id="badgeTp">TP</span>
+      </div>
+      <div style="color: var(--text-dim);">
+        WĘZEŁ: <span id="activeNodeLabel" style="color: #94a3b8;">OFFLINE</span>
+      </div>
+    </div>
+
+    <div class="main-readout">
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <div class="freq-number" id="freqDisplay">---.--</div>
+        <div class="freq-unit">MHz</div>
+      </div>
+
+      <div class="rds-block">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div class="rds-ps-text" id="rdsPs">--------</div>
+          <div style="font-family: Consolas; font-size: 13px; color: var(--text-dim);">PI: <span id="rdsPi" style="color:#fff;">----</span></div>
+        </div>
+        <div class="rds-rt-scroll" id="rdsRt">Oczekiwanie na RadioText (RT)...</div>
+      </div>
+    </div>
+
+    <div class="meters-row">
+      <div class="smeter-container">
+        <div class="smeter-header">
+          <span>POZIOM SYGNAŁU (RF)</span>
+          <span style="color: var(--accent-cyan); font-weight: bold;"><span id="sigLevel">0.0</span> dBf</span>
+        </div>
+        <div class="smeter-bar-bg">
+          <div class="smeter-bar-fill" id="sigBar"></div>
+        </div>
+        <div class="smeter-ticks">
+          <span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100+ dBf</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-deck">
+    <div class="tuning-strip">
+      <div class="step-buttons">
+        <button class="btn" onclick="stepFreq(-1.0)">-1.0</button>
+        <button class="btn" onclick="stepFreq(-0.1)">-0.1</button>
+        <button class="btn" onclick="stepFreq(-0.05)">-0.05</button>
+      </div>
+
+      <div class="direct-tune">
+        <input type="number" id="tuneInput" step="0.05" min="65.0" max="108.0" value="100.20" onkeydown="if(event.key==='Enter') tuneManual()">
+        <button class="btn btn-primary" onclick="tuneManual()">STRÓJ</button>
+      </div>
+
+      <div class="step-buttons">
+        <button class="btn" onclick="stepFreq(0.05)">+0.05</button>
+        <button class="btn" onclick="stepFreq(0.1)">+0.1</button>
+        <button class="btn" onclick="stepFreq(1.0)">+1.0</button>
+      </div>
+
+      <div>
+        <button class="btn" id="audioBtn" onclick="toggleAudio()">🔊 WŁĄCZ AUDIO</button>
+      </div>
+    </div>
+
+    <div class="presets-section">
+      <div class="presets-header">
+        <span class="presets-title">Bank Pamięci Stacji</span>
+        <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="saveCurrentToPresets()">+ Zapisz obecną</button>
+      </div>
+      <div class="presets-grid" id="presetsGrid"></div>
+    </div>
+  </div>
+
+  <div class="console-drawer">
+    <div class="log-output" id="logBox"></div>
+  </div>
+</div>
+
+<!-- Niewidoczna ramka stabilizująca strumień audio z uwzględnieniem polityki Cloudflare -->
+<iframe id="audioFrame" allow="autoplay"></iframe>
+
+<script>
+  let textWs = null;
+  let currentFreq = 100.20;
+  let currentPs = "";
+  let audioEnabled = false;
+
+  const defaultPresets = [
+    { freq: 96.00, name: "RMF FM" },
+    { freq: 100.20, name: "Fest FM" },
+    { freq: 97.70, name: "Radio ESKA" },
+    { freq: 101.60, name: "Radio Kraków" },
+    { freq: 104.10, name: "Radio ZET" }
+  ];
+
+  let presets = JSON.parse(localStorage.getItem('fmdx_presets')) || defaultPresets;
+
+  function renderPresets() {
+    const grid = document.getElementById('presetsGrid');
+    grid.innerHTML = '';
+    presets.forEach((p, idx) => {
+      const isCurrent = Math.abs(p.freq - currentFreq) < 0.03;
+      const card = document.createElement('div');
+      card.className = 'preset-card' + (isCurrent ? ' active-preset' : '');
+      card.innerHTML = `<div class="preset-freq">${p.freq.toFixed(2)} MHz</div><div class="preset-name">${p.name}</div>`;
+      card.onclick = () => { document.getElementById('tuneInput').value = p.freq.toFixed(2); tuneManual(); };
+      card.oncontextmenu = (e) => {
+        e.preventDefault();
+        if (confirm(`Usunąć ${p.name}?`)) {
+          presets.splice(idx, 1);
+          localStorage.setItem('fmdx_presets', JSON.stringify(presets));
+          renderPresets();
+        }
+      };
+      grid.appendChild(card);
+    });
+  }
+
+  function saveCurrentToPresets() {
+    const label = prompt("Nazwa stacji:", currentPs || `Stacja ${currentFreq.toFixed(2)}`);
+    if (label) {
+      presets.push({ freq: currentFreq, name: label.trim() });
+      localStorage.setItem('fmdx_presets', JSON.stringify(presets));
+      renderPresets();
+      log(`Zapisano stację: ${label}`, "ok");
+    }
+  }
+
+  function log(msg, type = "") {
+    const box = document.getElementById('logBox');
+    const time = new Date().toLocaleTimeString();
+    box.innerHTML += `<div>[${time}] <span ${type ? `class="${type}"` : ""}>${msg}</span></div>`;
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function updateNode(url) {
+    document.getElementById('serverUrl').value = url;
+    if (audioEnabled) {
+      document.getElementById('audioFrame').src = url;
+    }
+  }
+
+  function connectTuner() {
+    disconnectTuner();
+    let rawUrl = document.getElementById('serverUrl').value.trim().replace(/\/$/, "");
+    let wsBase = rawUrl.replace(/^https:\/\//i, "wss://").replace(/^http:\/\//i, "ws://");
+
+    log(`Łączenie z telemetrią ${wsBase}/text ...`, "info");
+    textWs = new WebSocket(wsBase + "/text");
+
+    textWs.onopen = () => {
+      document.getElementById('statusDot').classList.add('connected');
+      document.getElementById('activeNodeLabel').innerText = wsBase.replace(/^wss?:\/\//, '');
+      document.getElementById('activeNodeLabel').style.color = "var(--accent-green)";
+      log("Połączono z tunerem FM-DX!", "ok");
+    };
+
+    textWs.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.freq) {
+          currentFreq = parseFloat(data.freq);
+          document.getElementById('freqDisplay').innerText = currentFreq.toFixed(2);
+          renderPresets();
+        }
+        if (data.ps !== undefined) {
+          currentPs = (data.ps || "").trim();
+          document.getElementById('rdsPs').innerText = currentPs || "--------";
+          document.getElementById('badgeRds').classList.toggle('active-rds', currentPs.length > 0);
+        }
+        if (data.pi !== undefined) document.getElementById('rdsPi').innerText = data.pi || "----";
+        if (data.rt0 !== undefined || data.rt1 !== undefined) {
+          document.getElementById('rdsRt').innerText = (data.rt0 || data.rt1 || "").trim();
+        }
+        if (data.sig !== undefined) {
+          const sig = parseFloat(data.sig);
+          document.getElementById('sigLevel').innerText = sig.toFixed(1);
+          document.getElementById('sigBar').style.width = Math.min(100, Math.max(0, sig)) + "%";
+        }
+        if (data.st !== undefined) {
+          document.getElementById('badgeStereo').classList.toggle('active-stereo', data.st);
+        }
+      } catch(err) {}
+    };
+
+    textWs.onclose = () => {
+      document.getElementById('statusDot').classList.remove('connected');
+      document.getElementById('activeNodeLabel').innerText = "OFFLINE";
+      log("Rozłączono z węzłem.", "err");
+    };
+  }
+
+  function disconnectTuner() {
+    if (textWs) { textWs.close(); textWs = null; }
+    document.getElementById('audioFrame').src = "";
+    audioEnabled = false;
+    updateAudioBtn();
+  }
+
+  function tuneManual() {
+    const val = parseFloat(document.getElementById('tuneInput').value);
+    if (!isNaN(val) && textWs && textWs.readyState === WebSocket.OPEN) {
+      textWs.send("T" + Math.round(val * 1000));
+      log(`Strojenie na ${val.toFixed(2)} MHz`, "info");
+    }
+  }
+
+  function stepFreq(d) {
+    document.getElementById('tuneInput').value = (currentFreq + d).toFixed(2);
+    tuneManual();
+  }
+
+  function updateAudioBtn() {
+    const btn = document.getElementById('audioBtn');
+    if (audioEnabled) {
+      btn.innerText = "🔇 WYŁĄCZ AUDIO";
+      btn.classList.add('btn-audio-active');
+    } else {
+      btn.innerText = "🔊 WŁĄCZ AUDIO";
+      btn.classList.remove('btn-audio-active');
+    }
+  }
+
+  function toggleAudio() {
+    const frame = document.getElementById('audioFrame');
+    const rawUrl = document.getElementById('serverUrl').value.trim();
+
+    if (!audioEnabled) {
+      audioEnabled = true;
+      updateAudioBtn();
+      frame.src = rawUrl; // Uruchamia stabilny strumień w bezpiecznej ramce autoryzowanej przez serwer
+      log("Uruchomiono stabilny strumień audio w tle.", "ok");
+    } else {
+      audioEnabled = false;
+      updateAudioBtn();
+      frame.src = "";
+      log("Wyłączono audio.");
+    }
+  }
+
+  renderPresets();
+  log("Konsola FM-DX gotowa do pracy.", "info");
+</script>
+
+</body>
+</html>
